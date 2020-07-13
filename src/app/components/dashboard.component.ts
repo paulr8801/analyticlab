@@ -50,7 +50,7 @@ export class DashboardComponent implements OnInit {
   public lat = 4.742043976363009;
   public lng = -74.08699035644531;
   public zoom = 9;
-  public listLayers: string;
+  public listLayers: any;
   public headers: string[];
   public columns: string[];
   public data: any[];
@@ -79,7 +79,7 @@ export class DashboardComponent implements OnInit {
               offsetY: 40,
               fontSize: '16px',
               color: 'rgb(252, 132, 21)',
-              formatter: function(val) {
+              formatter(val) {
                 return val + '%';
               }
             }
@@ -131,7 +131,7 @@ export class DashboardComponent implements OnInit {
       },
       error => {
         alert('Error al ajecutar la Consulta');
-        console.log(<any> error);
+        console.log(error);
       }
     );
   }
@@ -148,7 +148,7 @@ export class DashboardComponent implements OnInit {
       },
       error => {
         alert('Error al ajecutar la Consulta');
-        console.log( error);
+        console.log(error);
       }
     );
   }
@@ -179,21 +179,43 @@ export class DashboardComponent implements OnInit {
         },
 
       });
+      this.map.on('click', 'points', (e) => {
+        const object: any = e.features[0].geometry;
+        const coordinates = object.coordinates.slice();
+        const description = '<p>' + e.features[0].properties.name + '</p>' +
+        '<p>' + e.features[0].properties.address + '</p>' +
+        '<p>' + e.features[0].properties.schedule + '</p>';
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(description)
+          .addTo(this.map);
+      });
+      this.map.on('mouseenter', 'points', () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', 'points', () => {
+        this.map.getCanvas().style.cursor = '';
+      });
     });
+
+
   }
 
   buildGraph(): void {
     const data = [];
     const categories = [];
     this.listGraphs.forEach(gp => {
-      data.push(new Intl.NumberFormat().format(Number(gp.sales)));
+      data.push(new Intl.NumberFormat('es-CO').format(Number(gp.sales)));
       categories.push(gp.name);
     });
     this.chartOptions1 = {
       series1: [
         {
           name: 'Sales USD',
-          data: data
+          data
         }
       ],
       chart: {
@@ -204,7 +226,7 @@ export class DashboardComponent implements OnInit {
         text: 'Sales'
       },
       xaxis: {
-        categories: categories
+        categories
       }
     };
   }
@@ -225,7 +247,7 @@ export class DashboardComponent implements OnInit {
       },
       error => {
         alert('Error al ajecutar la Consulta');
-        console.log( error);
+        console.log(error);
       }
     );
   }
